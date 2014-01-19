@@ -169,7 +169,7 @@ interrupt(registers_t *reg)
 		// before calling the system call.  The %eax REGISTER has
 		// changed by now, but we can read the APPLICATION's setting
 		// for this register out of 'current->p_registers'.
-		current->p_state = P_ZOMBIE;	// should this be P_EMPTY?
+		current->p_state = P_EMPTY;
 		current->p_exit_status = current->p_registers.reg_eax;
 		
 		if(current->p_block)
