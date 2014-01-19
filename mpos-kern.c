@@ -76,6 +76,7 @@ start(void)
 	for (i = 0; i < NPROCS; i++) {
 		proc_array[i].p_pid = i;
 		proc_array[i].p_state = P_EMPTY;
+		proc_array[i].p_block = 0;
 	}
 
 	// The first process has process ID 1.
@@ -168,8 +169,15 @@ interrupt(registers_t *reg)
 		// before calling the system call.  The %eax REGISTER has
 		// changed by now, but we can read the APPLICATION's setting
 		// for this register out of 'current->p_registers'.
-		current->p_state = P_ZOMBIE;
+		current->p_state = P_ZOMBIE;	// should this be P_EMPTY?
 		current->p_exit_status = current->p_registers.reg_eax;
+		
+		if(current->p_block)
+		{
+			proc_array[current->p_block].p_registers.reg_eax = current->p_exit_status;
+			proc_array[current->p_block].p_state = P_RUNNABLE;
+			current->p_block = 0;
+		}
 		schedule();
 
 	case INT_SYS_WAIT: {
@@ -189,7 +197,11 @@ interrupt(registers_t *reg)
 		else if (proc_array[p].p_state == P_ZOMBIE)
 			current->p_registers.reg_eax = proc_array[p].p_exit_status;
 		else
+		{
 			current->p_registers.reg_eax = WAIT_TRYAGAIN;
+			current->p_state = P_BLOCKED;
+			proc_array[p].p_block = current->p_pid;
+		}
 		schedule();
 	}
 
