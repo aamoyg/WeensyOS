@@ -1,11 +1,12 @@
-Name:
-UCLA ID:
+Name: Braden Anderson
+UCLA ID: 203744563
 
 
 -------------------------------------------------------------------------------
 
 Response to Exercise 1:
-
+The sys_getpid() call will have returned the correct value, since each process
+has its own set of registers.
 
 
 Anything else you'd like us to know:
