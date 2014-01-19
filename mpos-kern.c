@@ -222,34 +222,43 @@ static void copy_stack(process_t *dest, process_t *src);
 static pid_t
 do_fork(process_t *parent)
 {
-	// YOUR CODE HERE!
 	// First, find an empty process descriptor.  If there is no empty
-	//   process descriptor, return -1.  Remember not to use proc_array[0].
-	// Then, initialize that process descriptor as a running process
-	//   by copying the parent process's registers and stack into the
-	//   child.  Copying the registers is simple: they are stored in the
-	//   process descriptor in the 'p_registers' field.  Copying the stack
-	//   is a little more involved; see the copy_stack function, below.
-	//   The child process's registers will be equal to the parent's, with
-	//   two differences:
-	//   * reg_esp    The child process's stack pointer will point into
-	//                its stack, rather than the parent's.  copy_stack
-	//                should arrange this.
-	//   * ???????    There is one other difference.  What is it?  (Hint:
-	//                What should sys_fork() return to the child process?)
-	// You need to set one other process descriptor field as well.
-	// Finally, return the child's process ID to the parent.
+	//   process descriptor, return -1.
+	pid_t i;
+	process_t *proc = NULL;
+	uint16_t *k;
+	for (i = 1; i < NPROCS; i++) {
+		if(proc_array[i].p_state == P_EMPTY)
+		{
+			proc = &proc_array[i];
+			break;
+		}
+	}
+	if(!proc)
+		return -1;
+//	proc->p_pid = i;
+	
+	// copy registers
+	memcpy(&(proc->p_registers), &(parent->p_registers), sizeof(registers_t) );
+	
+	// copy stack
+	copy_stack(proc, parent);
+	
+	proc->p_state = parent->p_state;
+	proc->p_registers.reg_eax = 0;
 
-	return -1;
+	// Finally, return the child's process ID to the parent.
+	return proc->p_pid;
 }
 
 static void
 copy_stack(process_t *dest, process_t *src)
 {
+
 	uint32_t src_stack_bottom, src_stack_top;
 	uint32_t dest_stack_bottom, dest_stack_top;
+	uint32_t stack_size;
 
-	// YOUR CODE HERE!
 	// This function copies the 'src' process's stack into the 'dest'
 	// process's stack region.  Then it sets 'dest's stack pointer to
 	// correspond to 'src's stack pointer.
@@ -296,14 +305,16 @@ copy_stack(process_t *dest, process_t *src)
 	// and then how to actually copy the stack.  (Hint: use memcpy.)
 	// We have done one for you.
 
-	// YOUR CODE HERE!
-
-	src_stack_top = 0 /* YOUR CODE HERE */;
+	src_stack_top = PROC1_STACK_ADDR + (src->p_pid)*PROC_STACK_SIZE;
 	src_stack_bottom = src->p_registers.reg_esp;
-	dest_stack_top = 0 /* YOUR CODE HERE */;
-	dest_stack_bottom = 0 /* YOUR CODE HERE: calculate based on the
-				 other variables */;
-	// YOUR CODE HERE: memcpy the stack and set dest->p_registers.reg_esp
+	stack_size = src_stack_top - src_stack_bottom;
+	dest_stack_top = PROC1_STACK_ADDR + (dest->p_pid)*PROC_STACK_SIZE;;
+	dest_stack_bottom = dest_stack_top - stack_size;
+	
+	dest->p_registers.reg_esp = (uint32_t)
+		memcpy(
+			(char *)dest_stack_bottom, (char *)src_stack_bottom, stack_size
+		);
 }
 
 
