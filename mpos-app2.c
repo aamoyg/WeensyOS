@@ -16,7 +16,7 @@ void run_child(void);
 void
 start(void)
 {
-/*	pid_t p;
+	pid_t p;
 	int status;
 
 	counter = 0;
@@ -49,10 +49,11 @@ start(void)
 			(void) sys_wait(p);
 	}
 
-	sys_exit(0);*/
+	sys_exit(0);
 	
+/*
 	// Exercise 5
-	int x = 0;  /* note that local variable x lives on the stack */
+	int x = 0;
 	int * volatile xptr = &x; // 01
 	pid_t p = sys_fork();
 	if (p == 0)
@@ -65,6 +66,7 @@ start(void)
 		sys_wait(p); // assume blocking implementation
 	app_printf("%d", x);
 	sys_exit(0);
+*/
 }
 
 void

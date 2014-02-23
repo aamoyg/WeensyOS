@@ -212,7 +212,31 @@ interrupt(registers_t *reg)
 	}
 }
 
+pid_t sys_newthread(void (*start_function)(void))
+{
+	pid_t i;
+	process_t *proc = NULL;
+	uint16_t *k;
+	for (i = 1; i < NPROCS; i++) {
+		if(proc_array[i].p_state == P_EMPTY)
+		{
+			proc = &proc_array[i];
+			break;
+		}
+	}
+	if(!proc)
+		return -1;
+	
+	proc->p_state = P_RUNNABLE;
+	proc->p_registers.reg_eax = 0;
+	proc->p_registers.reg_eip = (uint32_t) start_function;
+	proc->p_registers.reg_esp = 
+		(uint32_t) PROC1_STACK_ADDR + (i)*PROC_STACK_SIZE;
+	
 
+	// Finally, return the child's process ID to the parent.
+	return i;
+}
 
 /*****************************************************************************
  * do_fork
