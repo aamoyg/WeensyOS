@@ -73,6 +73,7 @@ start(void)
 	for (i = 0; i < NPROCS; i++) {
 		proc_array[i].p_pid = i;
 		proc_array[i].p_state = P_EMPTY;
+		proc_array[i].p_priority = i;
 	}
 
 	// Set up process descriptors (the proc_array[])
@@ -98,7 +99,7 @@ start(void)
 	cursorpos = (uint16_t *) 0xB8000;
 
 	// Initialize the scheduling algorithm.
-	scheduling_algorithm = 1;
+	scheduling_algorithm = 2;
 
 	// Switch to the first process.
 	run(&proc_array[1]);
@@ -147,10 +148,9 @@ interrupt(registers_t *reg)
 		current->p_exit_status = reg->reg_eax;
 		schedule();
 
-	case INT_SYS_USER1:
-		// 'sys_user*' are provided for your convenience, in case you
-		// want to add a system call.
-		/* Your code here (if you want). */
+	case INT_SYS_PRIORITY:
+		// set priority
+		current->p_priority = reg->reg_eax;
 		run(current);
 
 	case INT_SYS_USER2:
@@ -189,6 +189,7 @@ void
 schedule(void)
 {
 	pid_t i;
+	int priority;
 	pid_t pid = current->p_pid;
 
 	if (scheduling_algorithm == 0)
@@ -201,13 +202,31 @@ schedule(void)
 			if (proc_array[pid].p_state == P_RUNNABLE)
 				run(&proc_array[pid]);
 		}
-	// priority scheduling
+	// priority scheduling (lower pids have higher priority)
 	else if (scheduling_algorithm == 1)
 		for(i = 1; i < NPROCS; i++) {
 			// Run the selected process, but skip
 			// non-runnable processes.
 			// Note that the 'run' function does not return.
 			if (proc_array[i].p_state == P_RUNNABLE) {
+				pid = i;
+				run(&proc_array[pid]);
+			}
+		}
+	else if (scheduling_algorithm == 2)
+		// scan for highest priority processes first
+		for(priority = 1; priority <= NPROCS; priority++) {
+			// don't look at current process
+			for(i = (pid + 1) % NPROCS; i != pid; i = (i + 1) % NPROCS) {
+				if (	proc_array[i].p_priority == priority && 
+					proc_array[i].p_state == P_RUNNABLE) {
+					pid = i;
+					run(&proc_array[pid]);
+				}
+			}
+			// check if current process is RUNNABLE
+			if (	proc_array[i].p_priority == priority && 
+				proc_array[i].p_state == P_RUNNABLE) {
 				pid = i;
 				run(&proc_array[pid]);
 			}

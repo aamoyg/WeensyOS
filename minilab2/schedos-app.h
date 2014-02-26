@@ -36,6 +36,23 @@ sys_yield(void)
 
 
 /*****************************************************************************
+ * sys_priority(priority)
+ *
+ *   Change the priority of the current process.
+ *
+ *****************************************************************************/
+
+static inline void
+sys_priority(int priority)
+{
+	asm volatile("int %0\n"
+		     : : "i" (INT_SYS_PRIORITY),
+		         "a" (priority)
+		     : "cc", "memory");
+}
+
+
+/*****************************************************************************
  * sys_exit(status)
  *
  *   Exit the current process with exit status 'status'.

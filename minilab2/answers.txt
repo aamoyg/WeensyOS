@@ -24,7 +24,7 @@ Average wait time for scheduling_algorithm 1:
 Exercise 4:
 
 Did you complete Exercise 4A or Exercise 4B?
-
+4A
 
 Exercise 5:
 
