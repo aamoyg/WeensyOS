@@ -53,6 +53,23 @@ sys_priority(int priority)
 
 
 /*****************************************************************************
+ * sys_priority(priority)
+ *
+ *   Change the priority of the current process.
+ *
+ *****************************************************************************/
+
+static inline void
+sys_putchar(uint16_t c)
+{
+	asm volatile("int %0\n"
+		     : : "i" (INT_SYS_PUTCHAR),
+		         "a" (c)
+		     : "cc", "memory");
+}
+
+
+/*****************************************************************************
  * sys_exit(status)
  *
  *   Exit the current process with exit status 'status'.
