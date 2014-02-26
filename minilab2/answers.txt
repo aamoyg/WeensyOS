@@ -6,7 +6,7 @@ UCLA ID:
 
 Response to Exercise 1:
 
-The name of the scheduling algorithm is:
+The name of the scheduling algorithm is: FIFO. 
 
 
 (Exercise 2 is a coding exercise)
