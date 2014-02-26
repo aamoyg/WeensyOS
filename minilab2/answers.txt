@@ -27,7 +27,8 @@ Did you complete Exercise 4A or Exercise 4B?
 4A
 
 Exercise 5:
-
+The first clock interrupt occurs during Process 1's execution, since it doesn't 
+successfully write to the console.
 
 (Exercise 6 is a coding exercise)
 
