@@ -45,6 +45,12 @@ never run. There is no way to fix this, since rdtsc is deterministic -- it's
 going to be the same every run. So every loop and call to yield() will be the 
 same number of cycles.
 
+The rand() call becomes predictable when the system is not receiving any input
+or doing any work. This means that the instruction pointer is in a cycle of 
+known length, so every call to rand() is going to return a number of known
+offset; there's a chance that the result of rand() % num_processes will never
+hit every element in tickets[].
+
 Anything else you'd like us to know:
 
 
