@@ -41,7 +41,10 @@ tickets when more than NTICKETS are allocated (wraparound).
 rand() is implemented by using the value of rdtsc. Unfortunately since execution
 is identical each time the emulator is started up, rand() is predictable across
 multiple run-throughs. I tried multiplying rdtsc by a few hard-coded primes, but
-it doesn't change the behavior much.
+it doesn't change the behavior much. Also, with the default number of tickets
+rand() always returns an even number, so some of the processes never run. There
+is no way to fix this, since rdtsc is deterministic -- it's going to be the same
+every run. If we had access to time.h then we could use that, but we don't.
 
 Anything else you'd like us to know:
 
