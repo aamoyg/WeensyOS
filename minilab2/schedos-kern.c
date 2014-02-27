@@ -100,17 +100,13 @@ start(void)
 		tickets[i-1] = i;
 	}
 	num_tickets = NPROCS-1;
-	tickets[num_tickets] = 2;
-	num_tickets++;
-	tickets[num_tickets] = 2;
-	num_tickets++;
 
 	// Initialize the cursor-position shared variable to point to the
 	// console's first character (the upper left).
 	cursorpos = (uint16_t *) 0xB8000;
 
 	// Initialize the scheduling algorithm.
-	scheduling_algorithm = 3;
+	scheduling_algorithm = 2;
 
 	// Switch to the first process.
 	run(&proc_array[1]);
@@ -137,7 +133,6 @@ void
 interrupt(registers_t *reg)
 {
 	int i;
-	int j;
 	// Save the current process's register state
 	// into its process descriptor
 	current->p_registers = *reg;
@@ -265,11 +260,9 @@ schedule(void)
 			}
 		}
 	// lottery scheduling
-	if (scheduling_algorithm == 3)
+	else if (scheduling_algorithm == 3)
 		while (1) {
-		//	pid = tickets[rand() % (num_tickets-1) + 1];
 			pid = tickets[rand() % num_tickets];
-		//	*cursorpos++ = (uint16_t)( ('0' + num_tickets) |  0x0F00 );
 
 			if (proc_array[pid].p_state == P_RUNNABLE)
 				run(&proc_array[pid]);
