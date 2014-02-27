@@ -32,6 +32,16 @@ successfully write to the console.
 
 (Exercise 6 is a coding exercise)
 
+Exercise 7:
+I implemented lottery scheduling. Processes are allocated 1 ticket each at the 
+beginning, but can request more via system call sys_grabtix(). The scheduling is
+done by choosing a random existing ticket. Behavior is to overwrite oldest 
+tickets when more than NTICKETS are allocated (wraparound).
+
+rand() is implemented by using the value of rdtsc. Unfortunately since execution
+is identical each time the emulator is started up, rand() is predictable across
+multiple run-throughs. I tried multiplying rdtsc by a few hard-coded primes, but
+it doesn't change the behavior much.
 
 Anything else you'd like us to know:
 

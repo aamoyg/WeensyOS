@@ -18,6 +18,7 @@
 // isolated: any process could modify any part of memory.)
 
 #define NPROCS		5
+#define NTICKETS	100
 #define PROC1_START	0x200000
 #define PROC_SIZE	0x100000
 
@@ -49,6 +50,9 @@ process_t *current;
 // The preferred scheduling algorithm.
 int scheduling_algorithm;
 
+static int num_tickets;
+pid_t tickets[NTICKETS];
+
 
 /*****************************************************************************
  * start
@@ -65,7 +69,7 @@ start(void)
 
 	// Set up hardware (schedos-x86.c)
 	segments_init();
-	interrupt_controller_init(1);
+	interrupt_controller_init(0);
 	console_clear();
 
 	// Initialize process descriptors as empty
@@ -92,14 +96,17 @@ start(void)
 
 		// Mark the process as runnable!
 		proc->p_state = P_RUNNABLE;
+		
+		tickets[i-1] = i;
 	}
+	num_tickets = NPROCS-1;
 
 	// Initialize the cursor-position shared variable to point to the
 	// console's first character (the upper left).
 	cursorpos = (uint16_t *) 0xB8000;
 
 	// Initialize the scheduling algorithm.
-	scheduling_algorithm = 0;
+	scheduling_algorithm = 3;
 
 	// Switch to the first process.
 	run(&proc_array[1]);
@@ -125,6 +132,7 @@ start(void)
 void
 interrupt(registers_t *reg)
 {
+	int i;
 	// Save the current process's register state
 	// into its process descriptor
 	current->p_registers = *reg;
@@ -157,6 +165,17 @@ interrupt(registers_t *reg)
 		// write char to console.
 		*cursorpos++ = reg->reg_eax;
 		run(current);
+	
+	case INT_SYS_GRABTIX:
+		// generate NUM additional tickets, all pointing to current pid
+		for(i = 0; i < reg->reg_eax; i++) {
+			tickets[(num_tickets+i) % NTICKETS] = current->p_pid;
+		}
+		num_tickets += reg->reg_eax;
+		if (num_tickets > NTICKETS)
+			num_tickets = NTICKETS;
+		
+		run(current);
 
 	case INT_CLOCK:
 		// A clock interrupt occurred (so an application exhausted its
@@ -171,7 +190,14 @@ interrupt(registers_t *reg)
 	}
 }
 
-
+uint32_t
+rand(void)
+{
+	uint64_t tsc;
+	asm volatile("rdtsc" : "=A" (tsc));
+	return tsc * 3541 + tsc * 853;
+	// in a perfect world these seed values wouldn't be hard-coded.
+}
 
 /*****************************************************************************
  * schedule
@@ -214,6 +240,7 @@ schedule(void)
 				run(&proc_array[pid]);
 			}
 		}
+	// custom priority scheduling
 	else if (scheduling_algorithm == 2)
 		// scan for highest priority processes first
 		for(priority = 1; priority <= NPROCS; priority++) {
@@ -231,6 +258,16 @@ schedule(void)
 				pid = i;
 				run(&proc_array[pid]);
 			}
+		}
+	// lottery scheduling
+	if (scheduling_algorithm == 3)
+		while (1) {
+		//	pid = tickets[rand() % (num_tickets-1) + 1];
+			pid = tickets[rand() % num_tickets];
+		//	*cursorpos++ = (uint16_t)( ('0' + num_tickets) |  0x0F00 );
+
+			if (proc_array[pid].p_state == P_RUNNABLE)
+				run(&proc_array[pid]);
 		}
 
 	else {
