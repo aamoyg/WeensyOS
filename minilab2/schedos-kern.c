@@ -100,6 +100,10 @@ start(void)
 		tickets[i-1] = i;
 	}
 	num_tickets = NPROCS-1;
+	tickets[num_tickets] = 2;
+	num_tickets++;
+	tickets[num_tickets] = 2;
+	num_tickets++;
 
 	// Initialize the cursor-position shared variable to point to the
 	// console's first character (the upper left).
@@ -133,6 +137,7 @@ void
 interrupt(registers_t *reg)
 {
 	int i;
+	int j;
 	// Save the current process's register state
 	// into its process descriptor
 	current->p_registers = *reg;
@@ -195,7 +200,7 @@ rand(void)
 {
 	uint64_t tsc;
 	asm volatile("rdtsc" : "=A" (tsc));
-	return tsc * 3541 + tsc * 853;
+	return tsc;
 	// in a perfect world these seed values wouldn't be hard-coded.
 }
 
